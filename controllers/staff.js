@@ -11,7 +11,7 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   dateStrings: 'date',
-  database: 'school',
+  database: 'cumsdbms',
 });
 
 // Database query promises

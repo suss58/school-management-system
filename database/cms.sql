@@ -10,6 +10,13 @@ CREATE TABLE IF NOT EXISTS `admin` (
     PRIMARY KEY(`admin_id`)
 );
 
+-- Create department table
+CREATE TABLE IF NOT EXISTS `department` (
+    `dept_id` VARCHAR(255) NOT NULL UNIQUE,
+    `d_name` VARCHAR(255) NOT NULL UNIQUE,
+    PRIMARY KEY (`dept_id`)
+);
+
 -- Create course table
 CREATE TABLE IF NOT EXISTS `course` (
     `c_id` VARCHAR(100) NOT NULL UNIQUE,
@@ -40,12 +47,6 @@ CREATE TABLE IF NOT EXISTS `student` (
     CONSTRAINT `student_fk0` FOREIGN KEY (`dept_id`) REFERENCES `department`(`dept_id`) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- Set default value for joining_date
-ALTER TABLE `student`
-ALTER COLUMN `joining_date` SET DEFAULT CURRENT_DATE;
-
-
-
 
 -- Create staff table
 CREATE TABLE IF NOT EXISTS `staff` (
@@ -63,12 +64,6 @@ CREATE TABLE IF NOT EXISTS `staff` (
     CONSTRAINT `staff_fk0` FOREIGN KEY (`dept_id`) REFERENCES `department`(`dept_id`) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- Create department table
-CREATE TABLE IF NOT EXISTS `department` (
-    `dept_id` VARCHAR(255) NOT NULL UNIQUE,
-    `d_name` VARCHAR(255) NOT NULL UNIQUE,
-    PRIMARY KEY (`dept_id`)
-);
 
 -- Create fee table
 CREATE TABLE IF NOT EXISTS `fee` (
@@ -81,12 +76,11 @@ CREATE TABLE IF NOT EXISTS `fee` (
     CONSTRAINT `fee_fk0` FOREIGN KEY (`s_id`) REFERENCES `student`(`s_id`) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- Create class table
 CREATE TABLE IF NOT EXISTS `class` (
     `class_id` INT NOT NULL AUTO_INCREMENT UNIQUE,
     `section` INT NOT NULL,
     `semester` INT NOT NULL,
-    `year` DATE DEFAULT CURRENT_DATE,
+    `year` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `c_id` VARCHAR(100),
     `st_id` VARCHAR(36) NOT NULL,
     PRIMARY KEY (`class_id`),
@@ -110,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `attendance` (
     `s_id` VARCHAR(36) NOT NULL,
     `date` DATE NOT NULL,
     `c_id` VARCHAR(100) NOT NULL,
-    `status` BOOLEAN DEFAULT NULL,
+    `status` TINYINT(1) DEFAULT NULL,
     PRIMARY KEY (`s_id`, `c_id`, `date`),
     CONSTRAINT `attendance_fk0` FOREIGN KEY (`s_id`) REFERENCES `student`(`s_id`) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT `attendance_fk1` FOREIGN KEY (`c_id`) REFERENCES `course`(`c_id`) ON UPDATE CASCADE ON DELETE RESTRICT
