@@ -69,8 +69,12 @@ exports.postLogin = async (req, res, next) => {
     });
     res.cookie('jwt', token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      expires: 0, // Set expiration date to the past to immediately expire the cookie
     });
+    // res.cookie('jwt', token, {
+    //   httpOnly: true,
+    //   maxAge: 24 * 60 * 60 * 1000,
+    // });
     res.redirect('/admin/dashboard');
   }
 };
