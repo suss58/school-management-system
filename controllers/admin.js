@@ -65,7 +65,7 @@ exports.postLogin = async (req, res, next) => {
     res.status(401).render('Admin/login', { errors });
   } else {
     const token = jwt.sign({ id: users[0].admin_id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
+      expiresIn: 86000, // Set the expiration to 1 day
     });
     res.cookie('jwt', token, {
       httpOnly: true,
@@ -74,6 +74,7 @@ exports.postLogin = async (req, res, next) => {
     res.redirect('/admin/dashboard');
   }
 };
+
 
 // 1.2 Register
 // ADMIN REGISTER ==> To be commented
