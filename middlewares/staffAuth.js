@@ -13,64 +13,56 @@ const selectID = (id) => {
   return new Promise((resolve, reject) => {
     const sql1 = 'SELECT st_name FROM staff WHERE st_id = ?';
     db.query(sql1, [id], (err, results) => {
-      if (err) return reject(err);
+      if (err) {
+        return reject(err);
+      }
       return resolve(results);
     });
   });
 };
 
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   const token = req.cookies.jwt;
-  if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, async (err, result) => {
-      if (err) {
-        req.flash(
-          'error_msg',
-          'You need to login as STAFF in order to view that source!'
-        );
-        res.redirect('/unauthorized');
-      } else {
-        const data = await selectID(result.id);
-        if (data.length === 0) {
-          req.flash(
-            'error_msg',
-            'You need to login as STAFF in order to view that source!'
-          );
-          res.redirect('/unauthorized');
-        } else {
-          req.user = result.id;
-          next();
-        }
-      }
-    });
-  } else {
-    req.flash(
-      'error_msg',
-      'You need to login as STAFF in order to view that source!'
-    );
+  if (!token) {
+    req.flash('error_msg', 'You need to login as STAFF in order to view that source!');
+    return res.redirect('/unauthorized');
+  }
+
+  try {
+    const result = await jwt.verify(token, process.env.JWT_SECRET);
+    const data = await selectID(result.id);
+
+    if (data.length === 0) {
+      req.flash('error_msg', 'You need to login as STAFF in order to view that source!');
+      return res.redirect('/unauthorized');
+    }
+
+    req.user = result.id;
+    console.log('User:', req.user); // Log the user object
+    next();
+  } catch (err) {
+    req.flash('error_msg', 'You need to login as STAFF in order to view that source!');
     res.redirect('/unauthorized');
   }
 };
 
-const forwardAuth = (req, res, next) => {
+const forwardAuth = async (req, res, next) => {
   const token = req.cookies.jwt;
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, async (err, result) => {
-      if (err) {
-        next();
-      } else {
-        const data = await selectID(result.id);
-        if (data.length === 0) {
-          next();
-        } else {
-          req.user = result.id;
-          res.redirect('/staff/dashboard');
-        }
+    try {
+      const result = await jwt.verify(token, process.env.JWT_SECRET);
+      const data = await selectID(result.id);
+
+      if (data.length !== 0) {
+        req.user = result.id;
+        return res.redirect('/staff/dashboard');
       }
-    });
-  } else {
-    next();
+    } catch (err) {
+      next();
+    }
   }
+
+  next();
 };
 
 module.exports = { requireAuth, forwardAuth };

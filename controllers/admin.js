@@ -67,14 +67,15 @@ exports.postLogin = async (req, res, next) => {
     const token = jwt.sign({ id: users[0].admin_id }, process.env.JWT_SECRET, {
       expiresIn: 86000, // Set the expiration to 1 day
     });
-    res.cookie('jwt', token, {
-      httpOnly: true,
-      expires: 0, // Set expiration date to the past to immediately expire the cookie
-    });
     // res.cookie('jwt', token, {
     //   httpOnly: true,
-    //   maxAge: 24 * 60 * 60 * 1000,
+    //   expires: 0, // Set expiration date to the past to immediately expire the cookie
     // });
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      expires: 0,
+    });
     res.redirect('/admin/dashboard');
   }
 };
@@ -344,7 +345,7 @@ exports.postAddStaff = async (req, res, next) => {
       return res.redirect('/admin/addStaff');
     }
 
-    const password = dob.toString().split('-').join('');
+    const password = dob.toString();
     const hashedPassword = await bcrypt.hash(password, 8);
 
     const sql2 = 'INSERT INTO staff SET ?';
@@ -476,7 +477,7 @@ exports.postStaffSettings = async (req, res, next) => {
     contact,
   } = req.body;
 
-  const password = dob.toString().split('-').join('');
+  const password = dob;
   const hashedPassword = await hashing(password);
 
   const sql =
@@ -522,13 +523,13 @@ exports.postAddStudent = async (req, res, next) => {
     postalCode,
     contact,
   } = req.body;
-  const password = dob.toString().split('-').join('');
+  const password = dob;
   const hashedPassword = await hashing(password);
   const sql1 =
-    'select count(*) as `count`, section from student where section = (select max(section) from student where dept_id = ?) AND dept_id = ?';
+    'select count(*) as count, section from student where section = (select max(section) from student where dept_id = ?) AND dept_id = ? GROUP BY section';
   const results = await queryParamPromise(sql1, [department, department]);
   let section = 1;
-  if (results[0].count !== 0) {
+  if (results[0] && length > 0 && results[0].count !== 0) {
     if (results[0].count == SECTION_LIMIT) {
       section = results[0].section + 1;
     } else {
@@ -551,7 +552,6 @@ exports.postAddStudent = async (req, res, next) => {
   req.flash('success_msg', 'Student added successfully');
   res.redirect('/admin/getAllStudents');
 };
-
 // 3.2 Get students on query
 exports.getRelevantStudent = async (req, res, next) => {
   const sql = 'SELECT * from department';

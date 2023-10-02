@@ -219,11 +219,11 @@ exports.getTimeTable = async (req, res, next) => {
   }
 
   let timeTableData = await queryParamPromise(
-    'select * from time_table where c_id in (?) and section = ? order by day, start_time',
+    'select * from time_table where c_id IN (?) and section = ? order by day, start_time',
     [coursesData, studentData.section]
   );
   const classesData = await queryParamPromise(
-    'select c_id, st_id from class where c_id in (?) and section = ?',
+    'select c_id, st_id from class where c_id IN (?) and section = ?',
     [coursesData, studentData.section]
   );
   for (let classData of classesData) {

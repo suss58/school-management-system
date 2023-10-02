@@ -51,7 +51,7 @@ exports.postLogin = async (req, res, next) => {
     res.status(401).render('Staff/login', { errors });
   } else {
     const token = jwt.sign({ id: users[0].st_id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
+      expiresIn: 8600,
     });
     res.cookie('jwt', token, {
       httpOnly: true,
@@ -62,6 +62,7 @@ exports.postLogin = async (req, res, next) => {
 };
 
 exports.getDashboard = async (req, res, next) => {
+  console.log('Requested Route:', req.path);
   const sql1 = 'SELECT * FROM staff WHERE st_id = ?';
   const user = req.user;
   const data = await queryParamPromise(sql1, [user]);
@@ -130,13 +131,22 @@ exports.getAttendance = async (req, res, next) => {
 
 exports.markAttendance = async (req, res, next) => {
   const { classdata, date } = req.body;
+  if (!classdata) {
+    return res.status(400).json({ error: 'classdata is required' });
+  }
   const regex1 = /[A-Z]+[0-9]+/g;
   const regex2 = /[A-Z]+-[0-9]+/g;
+  const match1 = classdata.match(regex1);
+  const match2 = classdata.match(regex2);
 
-  const c_id = classdata.match(regex1)[0];
-  const class_sec = classdata.match(regex2)[0].split('-');
+  // Check if the regex matches are found
+  if (!match1 || !match2) {
+    return res.status(400).json({ error: 'Invalid classdata format' });
+  }
+  const c_id = match1[0];
+  const class_sec = match2[0].split('-');
   const staffId = req.user;
-
+  
   const sql = `
     SELECT * FROM student WHERE dept_id = ? AND section = ?
 `;
