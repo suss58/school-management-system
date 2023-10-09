@@ -1,0 +1,52 @@
+<%- include('../Includes/begin.ejs') %>
+<%- include('../Includes/student_nav.ejs', { page_name: 'stu-report' }) %>
+
+<section id="content-wrapper">
+  <main role="main" class="pt-5 main">
+    <div class="main-content">
+      <div class="header pb-4 pb-sm-8 pt-5 pt-lg-8 d-flex align-items-center"
+        style="height: 100px; background-size: cover; background-position: center top;">
+      </div>
+      <div class="container-fluid mt--7">
+        <div class="row justify-content-center">
+          <div class="col-xl-12 order-xl-1">
+            <div class="card bg-secondary shadow">
+              <div class="card-header bg-white border-0">
+                <div class="row align-items-center">
+                  <div class="col-8">
+                    <h3 class="mb-0" style="color: brown;">Choose Semester</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form method="POST" action="/student/display/result" id="semesterForm">
+                  <div class="form-group">
+                    <label for="semesterSelect">Select Semester:</label>
+                    <select class="form-control" id="semesterSelect" name="semester">
+                      <option value="">Select Semester</option>
+                      <% for (let i=1; i <=8; i++) { %>
+                        <option value="<%= i %>">Semester <%= i %></option>
+                      <% } %>
+                    </select>
+                  </div>
+                  <div class="col-4 text-right">
+                    <button type="submit" class="btn btn-primary btn-sm" id="viewResultButton"
+                      style="background-color: #0f120f; color: white; border: none; padding: 6px 10px; border-radius: 5px;">View
+                      Result</button>
+                  </div>
+                </form>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+<%- include('../Includes/student_end.ejs') %>
+
+
+
+
+

@@ -1,0 +1,233 @@
+<%- include('../Includes/begin.ejs') %>
+  <%- include('../Includes/staff_nav.ejs') %>
+    <section id="content-wrapper">
+      <main role="main" class="pt-5 main">
+        <div class="main-content">
+          <div class="header pb-4 pb-sm-8 pt-5 pt-lg-8 d-flex align-items-center"
+            style="height: 100px; background-size: cover; background-position: center top;">
+          </div>
+          <div class="container-fluid mt--7">
+            <div class="row">
+              <div class="col-xl-12 order-xl-1">
+                <div class="card bg-secondary shadow">
+                  <div class="card-header bg-white border-0">
+                    <div class="row align-items-center">
+                      <div class="col-8">
+                      
+                        <h3 class="mb-0" style="color: brown;">ADD NEW RESULT</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+
+                    <div id="alertContainer">
+                      <% if (typeof errorFlash !=='undefined' && errorFlash.length> 0) { %>
+                        <div class="alert alert-danger">
+                          <strong>Error:</strong>
+                          <ul>
+                            <% errorFlash.forEach(error=> { %>
+                              <li>
+                                <%= error %>
+                              </li>
+                              <% }); %>
+                          </ul>
+                        </div>
+                        <% } else if (successFlash && successFlash.length> 0) { %>
+                          <div class="alert alert-success">
+                            <strong>Success:</strong>
+                            <%= successFlash[0] %>
+                          </div>
+                          <% } %>
+                    </div>
+
+
+
+                    <form action="/staff/addResult" method="POST" enctype="multipart/form-data">
+                      <!-- <h6 class="heading-small text-muted mb-4">Result Information</h6> -->
+                      <div class="pl-lg-4">
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="form-group focused">
+                              <label class="form-control-label" for="department">Department</label>
+                              <select class="form-control" id="department" name="department" required>
+                                <option value="" selected disabled>Select Department</option>
+                                <% departments.forEach(department=> { %>
+                                  <option value="<%= department.dept_id %>">
+                                    <%= department.d_name %>
+                                  </option>
+                                  <% }); %>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="form-group focused">
+                              <label class="form-control-label" for="semester">Semester</label>
+                              <select class="form-control" id="semester" name="semester" required>
+                                <option value="" selected disabled>Select Semester</option>
+                                <% for (let i=1; i <=8; i++) { %>
+                                  <option value="<%= i %>">
+                                    <%= i %>
+                                  </option>
+                                  <% } %>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="form-group focused">
+                              <label class="form-control-label" for="course">Course</label>
+                              <select class="form-control" id="course" name="course" required>
+                                <!-- Course options will be populated dynamically using JavaScript -->
+                              </select>
+                              <div id="suggestedCourses"></div>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="form-group focused">
+                              <label class="form-control-label" for="excelFile">Excel File</label>
+                              <input type="file" id="excelFile" name="excelFile" class="form-control-file"
+                                accept=".xls, .xlsx" required>
+                              <small class="text-danger">The .xls, .xlsx file format must be | rollNumber | s_name |
+                                marks |</small>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                          </div>
+                        </div>
+                        <hr class="my-4">
+                        <button type="submit" class="btn btn-primary btn-block">ADD RESULT</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+    </div>
+    </div>
+    <%- include('../Includes/staff_end.ejs') %>
+
+
+
+
+      <script>
+        let departmentId;
+
+        document.getElementById('department').addEventListener('change', function () {
+          departmentId = this.value;
+          updateCourses();
+        });
+
+        document.getElementById('semester').addEventListener('change', function () {
+          updateCourses();
+        });
+
+        async function updateCourses() {
+          var semester = document.getElementById('semester').value;
+          var courseSelect = document.getElementById('course');
+
+          if (departmentId && semester) {
+            try {
+              console.log(`Fetching courses for department: ${departmentId}, semester: ${semester}`);
+
+              const response = await fetch(`/staff/getCourses?semester=${semester}&dept_id=${departmentId}`);
+
+              if (!response.ok) {
+                throw new Error(`Failed to fetch courses. Server returned ${response.status}`);
+              }
+
+              const courses = await response.json();
+              console.log('Fetched courses:', courses);
+
+              courseSelect.innerHTML = '';
+
+              courses.forEach(course => {
+                var option = document.createElement('option');
+                option.value = course.c_id;
+                option.text = course.name;
+                courseSelect.add(option);
+              });
+            } catch (error) {
+              console.error('Error fetching courses:', error);
+              showAlert('Error', 'Failed to fetch courses. Please try again.', 'error');
+            }
+          }
+        }
+
+        document.querySelector('form').addEventListener('submit', async function (event) {
+  try {
+    event.preventDefault(); // Prevent the default form submission behavior
+
+    // Check if Excel file is uploaded
+    const excelFile = document.getElementById('excelFile').files[0];
+    if (!excelFile) {
+      showAlert('Error', 'Excel file is required for submission', 'error');
+      return;
+    }
+
+    const formData = new FormData(this);
+    const response = await fetch('/staff/addResult', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (response.headers.get('Content-Type').includes('application/json')) {
+      const responseData = await response.json();
+
+      if (response.status === 400) {
+        // Display JSON-formatted errors
+        showAlert('Error', responseData.errors.join('\n'), 'error');
+      } else if (response.status === 409) {
+        const userConfirmed = await showCustomConfirmation(responseData.confirmationMessage);
+        if (userConfirmed) {
+          const updateResponse = await fetch('/staff/addResult/confirm', {
+            method: 'POST',
+          });
+          if (updateResponse.ok) {
+            showAlert('Success', 'Results updated successfully', 'success');
+          } else {
+            throw new Error(`Failed to update. Server returned ${updateResponse.status}`);
+          }
+        }
+      } else if (response.status === 200) {
+        showAlert('Success', responseData.confirmationMessage || 'Results added successfully', 'success');
+      } else {
+        showAlert('Error', 'Failed to add results. Please try again.', 'error');
+      }
+    } else {
+      // Handle non-JSON responses accordingly
+      const htmlResponse = await response.text();
+      console.log(htmlResponse);
+      showAlert('Success', 'Results added successfully', 'success');
+      return;
+    }
+  } catch (error) {
+    console.error('Error processing form submission:', error);
+    showAlert('Error', `An unexpected error occurred: ${error.message}`, 'error');
+  }
+});
+
+async function showCustomConfirmation(message) {
+  return new Promise(resolve => {
+    // Replace this with your custom modal logic
+    const userConfirmed = window.confirm(message);
+    resolve(userConfirmed);
+  });
+}
+
+function showAlert(title, message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.classList.add('alert', `alert-${type}`);
+  alertDiv.innerHTML = `<strong>${title}:</strong> ${message}`;
+
+  document.getElementById('alertContainer').innerHTML = '';
+  document.getElementById('alertContainer').appendChild(alertDiv);
+
+  setTimeout(() => {
+    alertDiv.remove();
+  }, 5000);
+}
+</script>

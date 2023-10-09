@@ -6,12 +6,16 @@ const mailgun = require('mailgun-js');
 const DOMAIN = process.env.DOMAIN_NAME;
 const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: DOMAIN });
 
+
+const { validationResult } = require('express-validator');
+
+
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   dateStrings: 'date',
-  database: 'cumsdbms',
+  database: 'SRMS',
 });
 
 // Database query promises
@@ -105,153 +109,6 @@ exports.getProfile = async (req, res, next) => {
     dname: deptName[0].d_name,
     dob,
     jds,
-  });
-};
-
-exports.getSelectAttendance = async (req, res, next) => {
-  res.render('Student/selectAttendance', {
-    page_name: 'attendance',
-    curYear: 2021,
-  });
-};
-
-const getAttendanceData = async (year, months, courseData, s_id) => {
-  let monthDates = [];
-  let isPresent = [];
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'April',
-    'May',
-    'June',
-    'July',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  for (month of months) {
-    let dayNumber = 1;
-    let date = new Date(year, month, dayNumber);
-    let days = [];
-    let outerStatus = [];
-    while (date.getMonth() === month) {
-      let status = [];
-      const sqlDate =
-        year +
-        '-' +
-        (month < 9 ? '0' + (month + 1) : month + 1) +
-        '-' +
-        (dayNumber <= 9 ? '0' + dayNumber : dayNumber);
-      const sql3 =
-        'SELECT status from attendance WHERE c_id = ? AND s_id = ? AND date = ?';
-      for (course of courseData) {
-        const attendanceData = (
-          await queryParamPromise(sql3, [course.c_id, s_id, sqlDate])
-        )[0];
-        status.push(attendanceData);
-      }
-      outerStatus.push(status);
-      const monthName = monthNames[month];
-      days.push({ monthName, dayNumber });
-      dayNumber++;
-      date.setDate(date.getDate() + 1);
-    }
-    isPresent.push(outerStatus);
-    monthDates.push(days);
-  }
-  return [monthDates, isPresent];
-};
-
-exports.postSelectAttendance = async (req, res, next) => {
-  const { year, semester } = req.body;
-  const sql1 = 'SELECT * FROM student WHERE s_id = ?';
-  const studentData = (await queryParamPromise(sql1, [req.user]))[0];
-  const sql2 = 'SELECT * from course WHERE dept_id = ? AND semester = ?';
-  const courseData = await queryParamPromise(sql2, [
-    studentData.dept_id,
-    semester,
-  ]);
-  var monthDates, isPresent;
-  if (semester % 2 === 0) {
-    [monthDates, isPresent] = await getAttendanceData(
-      parseInt(year),
-      [0, 1, 2, 3],
-      courseData,
-      req.user
-    );
-  } else {
-    [monthDates, isPresent] = await getAttendanceData(
-      parseInt(year),
-      [7, 8, 9, 10],
-      courseData,
-      req.user
-    );
-  }
-  res.render('Student/attendance', {
-    page_name: 'attendance',
-    curSemester: semester,
-    studentData,
-    courseData,
-    monthDates,
-    isPresent,
-  });
-};
-
-exports.getTimeTable = async (req, res, next) => {
-  const sql1 = 'SELECT * FROM student WHERE s_id = ?';
-  const studentData = (await queryParamPromise(sql1, [req.user]))[0];
-  const days = (
-    await queryParamPromise(
-      'select datediff(current_date(), ?) as diff',
-      studentData.joining_date
-    )
-  )[0].diff;
-  const semester = Math.floor(days / 182) + 1;
-  let coursesData = await queryParamPromise(
-    'select c_id from course where dept_id = ? and semester = ?',
-    [studentData.dept_id, semester]
-  );
-  for (let i = 0; i < coursesData.length; ++i) {
-    coursesData[i] = coursesData[i].c_id;
-  }
-
-  let timeTableData = await queryParamPromise(
-    'select * from time_table where c_id IN (?) and section = ? order by day, start_time',
-    [coursesData, studentData.section]
-  );
-  const classesData = await queryParamPromise(
-    'select c_id, st_id from class where c_id IN (?) and section = ?',
-    [coursesData, studentData.section]
-  );
-  for (let classData of classesData) {
-    const staffName = (
-      await queryParamPromise('select st_name from staff where st_id = ?', [
-        classData.st_id,
-      ])
-    )[0].st_name;
-    const courseName = (
-      await queryParamPromise('select name from course where c_id = ?', [
-        classData.c_id,
-      ])
-    )[0].name;
-    classData.staffName = staffName;
-    classData.courseName = courseName;
-  }
-  const startTimes = ['10:00', '11:00', '12:00', '13:00'];
-  const endTimes = ['11:00', '12:00', '13:00', '14:00'];
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  res.render('Student/timetable', {
-    page_name: 'Time Table',
-    studentData,
-    semester,
-    timeTableData,
-    startTimes,
-    endTimes,
-    dayNames,
-    classesData,
   });
 };
 
@@ -366,4 +223,50 @@ exports.resetPassword = (req, res, next) => {
       res.render('Student/resetPassword', { errors });
     }
   }
+};
+
+
+
+
+// Display result
+exports.getDisplayResult = (req, res, next) => {
+    // Render a page with a form to choose the semester
+    res.render('Student/displayResult', { page_name: 'display' });
+};
+
+// Display semester result
+exports.displaySemesterResult = async (req, res, next) => {
+    const { semester } = req.body;
+
+    try {
+       const sql = `
+  SELECT c.name AS subjectName, r.marks
+  FROM result r
+  JOIN course c ON r.c_id = c.c_id
+  WHERE r.s_id = ? AND r.semester = ?;
+`;
+
+const results = await queryParamPromise(sql, [req.user, semester]);
+
+        // Check if results is an array with data
+        if (!Array.isArray(results) || results.length === 0) {
+            return res.status(404).json({ message: 'No results found for the selected semester' });
+        }
+
+        // Calculate CGPA (Replace this with your own logic based on GPA)
+        const totalMarks = results.reduce((total, result) => total + result.marks, 0);
+        const cgpa = totalMarks / results.length;
+
+        // Render a page with the semester results and CGPA
+        res.render('Student/displaySemesterResult', {
+            page_name: 'display',
+            semester,
+            results,
+            cgpa,
+        });
+    } catch (err) {
+        console.error(err);
+        // Handle any errors or send an error response
+        res.status(500).send('Error fetching results');
+    }
 };

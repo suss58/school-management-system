@@ -4,26 +4,27 @@ const { requireAuth, forwardAuth } = require('../middlewares/studentAuth');
 
 const router = express.Router();
 
-// get login page
 router.get('/login', forwardAuth, controller.getLogin);
 router.post('/login', controller.postLogin);
 
 router.get('/dashboard', requireAuth, controller.getDashboard);
 router.get('/profile', requireAuth, controller.getProfile);
 
-router.get('/selectAttendance', requireAuth, controller.getSelectAttendance);
-router.post('/selectAttendance', requireAuth, controller.postSelectAttendance);
-
-router.get('/timetable', requireAuth, controller.getTimeTable);
-
 router.get('/logout', requireAuth, controller.getLogout);
 
-// 1.5 FORGET PASSWORD
+// Forget Password
 router.get('/forgot-password', forwardAuth, controller.getForgotPassword);
 router.put('/forgot-password', controller.forgotPassword);
 
-// 1.6 RESET PASSWORD
-router.get('/resetpassword/:id', forwardAuth, controller.getResetPassword);
-router.put('/resetpassword', controller.resetPassword);
+// Reset Password
+router.get('/reset-password/:id', forwardAuth, controller.getResetPassword);
+router.put('/reset-password', controller.resetPassword);
 
+// Get the student result page
+router.get('/result', requireAuth, controller.getDisplayResult);
+
+// Fetch results for a specific semester
+router.post('/display/result', requireAuth, controller.displaySemesterResult);
+
+// router.post('/display/result', requireAuth, controller.DisplayResult);
 module.exports = router;

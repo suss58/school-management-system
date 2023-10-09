@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School of Engineering</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+        integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+        <style>
+   
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #e7e7e7;
+            margin: 0;
+            padding: 0;
+        }
+
+        #wrapper {
+            padding-left: 0;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        #sidebar-wrapper {
+            z-index: 1000;
+            position: fixed;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            margin-left: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #000000;
+            transition: all 0.5s ease;
+            color: #000; /* Set text color to black */
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+            width: 0;
+        }
+
+        .sidebar-brand {
+            position: absolute;
+            top: 0;
+            width: 250px;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .sidebar-brand h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .sidebar-nav {
+            position: absolute;
+            top: 75px;
+            width: 250px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .sidebar-nav>li {
+            text-indent: 10px;
+            line-height: 42px;
+        }
+
+        .sidebar-nav>li a {
+            display: block;
+            text-decoration: none;
+            color: #fff; /* Set text color to white */
+            font-weight: 600;
+            font-size: 18px;
+            background: #000000;
+        }
+
+        .sidebar-nav>li>a:hover,
+        .sidebar-nav>li.active>a {
+            text-decoration: none;
+            color: #f8be12;
+            background: #424242;
+        }
+
+        #navbar-wrapper {
+            width: 100%;
+            position: absolute;
+            z-index: 2;
+        }
+
+        #wrapper.toggled #navbar-wrapper {
+            position: absolute;
+            margin-right: 0;
+        }
+
+        #navbar-wrapper .navbar {
+            border-width: 0 0 0 0;
+            background-color: #000000;
+            font-size: 24px;
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        #navbar-wrapper .navbar a {
+            color: #fff;
+        }
+
+        #navbar-wrapper .navbar a:hover {
+            color: #f8be12;
+        }
+
+        #content-wrapper {
+            width: 100%;
+            position: absolute;
+            padding: 1px;
+            top: 1px;
+            background-color: #fff;
+            /* Set background color to white */
+            color: #7f1c1c; /* Set text color to black */
+        }
+
+        #wrapper.toggled #content-wrapper {
+            position: absolute;
+            margin-right: 0;
+        }
+
+        /* Styles for the result table */
+        .table.table-bordered.table-dark {
+            background-color: #fff; /* Set background color to white */
+            color: #000; /* Set text color to black */
+        }
+
+
+
+        #sidebar-wrapper{
+        background-color: #171717;
+    }
+
+            @media (min-width: 992px) {
+                #wrapper {
+                    padding-left: 250px;
+                }
+    
+                #wrapper.toggled {
+                    padding-left: 60px;
+                }
+    
+                #sidebar-wrapper {
+                    width: 250px;
+                }
+    
+                #wrapper.toggled #sidebar-wrapper {
+                    width: 60px;
+                }
+    
+                #wrapper.toggled #navbar-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #wrapper.toggled #content-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #navbar-wrapper {
+                    position: relative;
+                }
+    
+                #wrapper.toggled {
+                    padding-left: 60px;
+                }
+    
+                #content-wrapper {
+                    position: relative;
+                    top: 0;
+                }
+    
+                #wrapper.toggled #navbar-wrapper,
+                #wrapper.toggled #content-wrapper {
+                    position: relative;
+                    margin-right: 60px;
+                }
+            }
+   
+            @media (min-width: 768px) and (max-width: 991px) {
+                #wrapper {
+                    padding-left: 60px;
+                }
+    
+                #sidebar-wrapper {
+                    width: 60px;
+                }
+    
+                #wrapper.toggled #navbar-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #wrapper.toggled #content-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #navbar-wrapper {
+                    position: relative;
+                }
+    
+                #wrapper.toggled {
+                    padding-left: 250px;
+                }
+    
+                #content-wrapper {
+                    position: relative;
+                    top: 0;
+                }
+    
+                #wrapper.toggled #navbar-wrapper,
+                #wrapper.toggled #content-wrapper {
+                    position: relative;
+                    margin-right: 250px;
+                }
+            }
+    
+            @media (max-width: 767px) {
+                #wrapper {
+                    padding-left: 0;
+                }
+    
+                #sidebar-wrapper {
+                    width: 0;
+                }
+    
+                #wrapper.toggled #sidebar-wrapper {
+                    width: 250px;
+                }
+    
+                #wrapper.toggled #navbar-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #wrapper.toggled #content-wrapper {
+                    position: absolute;
+                    margin-right: 0;
+                }
+    
+                #navbar-wrapper {
+                    position: relative;
+                }
+    
+                #wrapper.toggled {
+                    padding-left: 250px;
+                }
+    
+                #content-wrapper {
+                    position: relative;
+                    top: 0;
+                }
+    
+                #wrapper.toggled #navbar-wrapper,
+                #wrapper.toggled #content-wrapper {
+                    position: relative;
+                    margin-right: 250px;
+                }
+            }
+            
+        </style>
+
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div id="wrapper" class="d-flex">
+            
+            <aside id="sidebar-wrapper" class=" fixed-left">
+                <div class="sidebar-brand text-white">
+                    <h2>School of Engineering</h2>
+                </div>
+                <ul class="sidebar-nav">
+                    <li class="nav-item <% if (page_name === 'overview') { %>active<% } %>">
+                        <a class="nav-link" href="/student/dashboard"><i class="fa fa-home"></i>Overview</a>
+                    </li>
+                    <li class="nav-item <% if (page_name === 'profile') { %>active<% } %>">
+                        <a class="nav-link" href="/student/profile"><i class="fa fa-id-card"></i>Profile</a>
+                    </li>
+                    <hr class="bg-light">
+                    <!-- Add more menu items as needed -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fa fa-cog"></i>Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/student/logout"><i class="fa fa-sign-out-alt"></i>Logout</a>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Content -->
+            <div id="content-wrapper" class="p-4">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-top:-18px;">
+                   
+                    <a class="navbar-brand" href="#" id="sidebar-toggle"><i class="fa fa-bars"></i></a>
+                </nav>
+                <div class="card-header bg-dark text-white">
+                </div>
+                <!-- Main Content -->
+                <section id="main-content" class="pt-5">
+                    <hr>
+                    <div class="card">
+                       
+                            <div class="card">
+                                <h4 class="text-center"> Semester <%= semester %>
+                                </h4>
+                                <div class="card-body">
+                                    <% if (results.length> 0) { %>
+                                        <table class="table table-bordered table-dark">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th scope="col">Course Name</th>
+                                                    <th scope="col">GPA</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% results.forEach((result)=> { %>
+                                                    <tr>
+                                                        <td>
+                                                            <%= result.subjectName %>
+                                                        </td>
+                                                        <td>
+                                                            <%= result.marks %>
+                                                        </td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    <% } else { %>
+                                        <div class="alert alert-info text-center" role="alert">
+                                            No results available for this semester.
+                                        </div>
+                                    <% } %>
+
+                                    <div class="text-center mt-2">
+                                        <% if (cgpa) { %>
+                                            <h3 class="text-dark">CGPA: <%= cgpa.toFixed(2) %>
+                                            </h3>
+                                        <% } else { %>
+                                            <div class="alert alert-warning" role="alert">
+                                                CGPA calculation not available.
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+   
+
+</body>
+
+</html>

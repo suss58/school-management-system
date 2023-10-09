@@ -1,6 +1,7 @@
 <%- include('../Includes/begin.ejs') %>
+<%- include('../Includes/student_nav.ejs', { page_name: 'result' }) %>
 
-    <%- include('../Includes/student_nav.ejs') %>
+
 
 
         <section id="content-wrapper">
@@ -35,7 +36,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Student Name</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= data[0].s_name %></p>
+                                                            <p>
+                                                                <%= data[0].s_name %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -43,7 +46,9 @@
                                                     <div class="form-group">
                                                         <label class="form-control-label">Email</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= data[0].email %></p>
+                                                            <p>
+                                                                <%= data[0].email %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -53,7 +58,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Date of Birth</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= dob %></p>
+                                                            <p>
+                                                                <%= dob %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -61,7 +68,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Joining Date</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= jds %></p>
+                                                            <p>
+                                                                <%= jds %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -76,7 +85,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Department</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= dname %></p>
+                                                            <p>
+                                                                <%= dname %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -84,7 +95,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Section</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= data[0].section %></p>
+                                                            <p>
+                                                                <%= data[0].section %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -99,7 +112,9 @@
                                                     <div class="form-group focused">
                                                         <label class="form-control-label">Address</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= data[0].s_address %></p>
+                                                            <p>
+                                                                <%= data[0].s_address %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -110,7 +125,9 @@
                                                         <label class="form-control-label">Contact Number
                                                             (Student)</label>
                                                         <div class="card form-control form-control-alternative">
-                                                            <p><%= data[0].contact %></p>
+                                                            <p>
+                                                                <%= data[0].contact %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>

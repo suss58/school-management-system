@@ -9,10 +9,16 @@ const cors = require('cors');
 const methodOverride = require('method-override');
 const mysql = require('mysql');
 const fs = require('fs');
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+const app = express();
+const fileUpload = require('express-fileupload');
 
 env.config();
-const app = express();
 
+// Middleware
+app.use(fileUpload());
 app.use(cors());
 app.use(methodOverride('_method'));
 
@@ -36,29 +42,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// Consolidated Routes
 const adminRoutes = require('./routes/admin');
 const staffRoutes = require('./routes/staff');
 const studentRoutes = require('./routes/student');
 const homeRoutes = require('./routes/home');
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.use('/admin', adminRoutes);
-app.use('/staff', staffRoutes);
 app.use('/student', studentRoutes);
+app.use('/staff', staffRoutes);
 app.use('/', homeRoutes);
 
-app.use(homeRoutes);
-
+// MySQL Connection
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'Sushil',
   password: 'sushil58',
-  database: 'cumsdbms',
+  database: 'SRMS',
   authSwitchHandler: (data, cb) => {
     if (data.pluginName === 'mysql_native_password') {
       const password = Buffer.from('sushil58').toString('binary');
@@ -91,7 +97,8 @@ connection.connect((err) => {
   }
 });
 
+// Server Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server started @ ${PORT}`);
+  console.log(`Server started at http://localhost:${PORT}`);
 });

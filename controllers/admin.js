@@ -11,7 +11,7 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   dateStrings: 'date',
-  database: 'cumsdbms',
+  database: 'SRMS',
 });
 
 // Students limit per section
@@ -517,10 +517,10 @@ exports.postAddStudent = async (req, res, next) => {
     dob,
     name,
     gender,
+    rollNumber,
     department,
     address,
     city,
-    postalCode,
     contact,
   } = req.body;
   const password = dob;
@@ -529,7 +529,7 @@ exports.postAddStudent = async (req, res, next) => {
     'select count(*) as count, section from student where section = (select max(section) from student where dept_id = ?) AND dept_id = ? GROUP BY section';
   const results = await queryParamPromise(sql1, [department, department]);
   let section = 1;
-  if (results[0] && length > 0 && results[0].count !== 0) {
+  if (results[0] && results.length > 0 && results[0].count !== 0) {
     if (results[0].count == SECTION_LIMIT) {
       section = results[0].section + 1;
     } else {
@@ -541,9 +541,10 @@ exports.postAddStudent = async (req, res, next) => {
     s_id: uuidv4(),
     s_name: name,
     gender: gender,
+    rollNumber: rollNumber,
     dob: dob,
     email: email,
-    s_address: address + '-' + city + '-' + postalCode,
+    s_address: address + '-' + city ,
     contact: contact,
     password: hashedPassword,
     section: section,
@@ -630,15 +631,14 @@ exports.getStudentSettings = async (req, res, next) => {
 
 exports.postStudentSettings = async (req, res, next) => {
   const {
-    old_email,
     email,
     dob,
     name,
     gender,
+    rollNumber,
     department,
     address,
     city,
-    postalCode,
     contact,
   } = req.body;
   const password = dob.toString().split('-').join('');
@@ -655,13 +655,14 @@ exports.postStudentSettings = async (req, res, next) => {
     }
   }
   const sql2 =
-    'UPDATE STUDENT SET s_name = ?, gender = ?, dob = ?,email = ?, s_address = ?, contact = ?, password = ?, section = ?, dept_id = ? WHERE email = ?';
+    'UPDATE STUDENT SET s_name = ?, gender = ?, rollNumber= ?, dob = ?,email = ?, s_address = ?, contact = ?, password = ?, section = ?, dept_id = ? WHERE email = ?';
   await queryParamPromise(sql2, [
     name,
     gender,
     dob,
     email,
-    address + '-' + city + '-' + postalCode,
+    rollNumber,
+    address + '-' + city ,
     contact,
     hashedPassword,
     section,

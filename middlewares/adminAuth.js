@@ -6,7 +6,7 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   dateStrings: 'date',
-  database: 'cumsdbms',
+  database: 'SRMS',
 });
 
 const selectID = (id) => {
@@ -19,38 +19,6 @@ const selectID = (id) => {
   });
 };
 
-// const requireAuth = (req, res, next) => {
-//   const token = req.cookies.jwt;
-//   if (token) {
-//     jwt.verify(token, process.env.JWT_SECRET, async (err, result) => {
-//       if (err) {
-//         req.flash(
-//           'error_msg',
-//           'You need to login as ADMIN in order to view that source!'
-//         );
-//         res.redirect('/unauthorized');
-//       } else {
-//         const data = await selectID(result.id);
-//         if (data.length === 0) {
-//           req.flash(
-//             'error_msg',
-//             'You need to login as ADMIN in order to view that source!'
-//           );
-//           res.redirect('/unauthorized');
-//         } else {
-//           req.user = result.id;
-//           next();
-//         }
-//       }
-//     });
-//   } else {
-//     req.flash(
-//       'error_msg',
-//       'You need to login as ADMIN in order to view that source!'
-//     );
-//     res.redirect('/unauthorized');
-//   }
-// };
 
 const requireAuth = (req, res, next) => {
   // Define an array of routes that should not require authentication

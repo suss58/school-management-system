@@ -5,13 +5,19 @@ const bcrypt = require('bcryptjs');
 const mailgun = require('mailgun-js');
 const DOMAIN = process.env.DOMAIN_NAME;
 const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: DOMAIN });
+const XLSX = require('xlsx');
+const multer = require('multer');
+const { error } = require('update/lib/utils');
+const upload = multer({ dest: 'uploads/' });
+
+
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   dateStrings: 'date',
-  database: 'cumsdbms',
+  database: 'SRMS',
 });
 
 // Database query promises
@@ -146,21 +152,21 @@ exports.markAttendance = async (req, res, next) => {
   const c_id = match1[0];
   const class_sec = match2[0].split('-');
   const staffId = req.user;
-  
+
   const sql = `
     SELECT * FROM student WHERE dept_id = ? AND section = ?
 `;
 
   let students = await queryParamPromise(sql, [class_sec[0], class_sec[1]]);
-  for (student of students) {
+  for (students of students) {
     const status = await queryParamPromise(
       'SELECT status FROM attendance WHERE c_id = ? AND s_id = ? AND date = ?',
-      [c_id, student.s_id, date]
+      [c_id, students.s_id, date]
     );
     if (status.length !== 0) {
-      student.status = status[0].status;
+      students.status = status[0].status;
     } else {
-      student.status = 0;
+      students.status = 0;
     }
   }
 
@@ -366,5 +372,225 @@ exports.resetPassword = (req, res, next) => {
       errors.push({ msg: 'Authentication Error' });
       res.render('Staff/resetPassword', { errors });
     }
+  }
+};
+
+
+
+
+
+// Function to fetch courses based on department and semester
+exports.getCourses = async (req, res) => {
+  const { dept_id, semester } = req.query;
+
+  try {
+    // Check if both department and semester are provided
+    if (!dept_id || !semester) {
+      return res.status(400).json({ error: 'Both department and semester are required' });
+    }
+
+    console.log(`Fetching courses for department: ${dept_id}, semester: ${semester}`);
+
+    // Fetch courses based on the department and semester
+    const sql = 'SELECT c_id, name FROM course WHERE dept_id = ? AND semester = ?';
+    const courses = await queryParamPromise(sql, [dept_id, semester]);
+
+    console.log('Fetched courses:', courses);
+
+    // Return the courses as JSON
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+
+    // Handle the error and send an appropriate JSON response
+    res.status(500).json({ error: 'Error fetching courses', details: error.message });
+  }
+};
+
+
+
+
+// Route to render the "Add Result" page
+exports.getAddResult = async (req, res) => {
+  try {
+    // Fetch department names for populating the dropdown
+    const departments = await zeroParamPromise('SELECT dept_id, d_name FROM department');
+
+    // Get flash messages from the session
+    const errorFlash = req.flash('error');
+    const successFlash = req.flash('success');
+
+    // Render the page with department data and flash messages
+    res.render('Staff/addResult', {
+      page_name: 'results',
+      departments,
+      errorFlash,
+      successFlash,
+    });
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/staff/addResult');
+  }
+};
+
+
+exports.postAddResult = async (req, res) => {
+  const { semester, course, department } = req.body;
+
+  // Check if Excel file is uploaded
+  if (!req.files || !req.files.excelFile) {
+    return handleErrors(req, res, 'Error: Excel file is required for submission');
+  }
+
+  // Handle Excel file upload
+  const file = req.files.excelFile;
+
+  // Check if all required fields are provided
+  if (!semester || !course || !department) {
+    return handleErrors(req, res, 'Error: All fields are required for submission');
+  }
+
+  try {
+    // Fetch department names for populating the dropdown
+    const departments = await zeroParamPromise('SELECT dept_id, d_name FROM department');
+
+    // Check if the selected department is valid
+    const selectedDepartment = departments.find(dep => dep.dept_id === department);
+    if (!selectedDepartment) {
+      return handleErrors(req, res, 'Error: Invalid department selected');
+    }
+
+    // Parse the Excel file
+    const workbook = XLSX.read(file.data, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Initialize an array to store the data
+    const data = [];
+
+    // Initialize an array to store errors related to missing student records
+    const missingStudentErrors = [];
+
+    for (let rowNum = 2; ; rowNum++) {
+      const rollNumberCell = worksheet[`A${rowNum}`];
+      const s_nameCell = worksheet[`B${rowNum}`];
+      const marksCell = worksheet[`C${rowNum}`];
+
+      // Break if any of the cells is undefined or null
+      if (
+        rollNumberCell === undefined || rollNumberCell.v == null ||
+        s_nameCell === undefined || s_nameCell.v == null ||
+        marksCell === undefined || marksCell.v == null
+      ) {
+        // If any of the cells is empty, break out of the loop
+        break;
+      }
+
+      // Extract values from the cells
+      const rollNo = rollNumberCell.v;
+      const name = s_nameCell.v;
+      const gpa = marksCell.v;
+
+      if (semester && department && course && rollNo && gpa && name) {
+        const sql2 = 'SELECT s_id FROM student WHERE rollNumber = ? AND dept_id = ?';
+        const sidResult = await queryParamPromise(sql2, [rollNo, department]);
+
+        // Check if the query returned any results
+        if (sidResult.length > 0) {
+          const sid = sidResult[0].s_id;
+
+          data.push({ department, course, rollNo, name, gpa, sid, semester });
+        } else {
+          console.error(`Error: s_id not found for rollNo: ${rollNo}`);
+          const errorMessage = `Student not found for rollNo: ${rollNo} in the selected department`;
+          req.flash('error', errorMessage);
+          missingStudentErrors.push(`Error: ${errorMessage}`);
+        }
+      } else {
+        return handleErrors(req, res, 'Error: One or more values are null in the Excel file');
+      }
+    }
+
+    if (missingStudentErrors.length > 0) {
+      req.flash('missingStudentErrors', missingStudentErrors);
+      return res.redirect('/staff/addResult');
+    }
+
+    // Continue with the database insertion logic
+    try {
+      // Start a transaction
+      await queryParamPromise('START TRANSACTION');
+
+      // Iterate through the data array and insert/update each record into the database
+      for (const { department, sid, semester, course, rollNo, gpa } of data) {
+        // Check for existing records for the same department, semester, subject, and rollNumber
+        const existingRecordsSql =
+          'SELECT * FROM result WHERE dept_id = ? AND semester = ? AND c_id = ? AND rollNumber = ?';
+        const existingRecords = await queryParamPromise(existingRecordsSql, [department, semester, course, rollNo]);
+
+        // If there are existing records, send a confirmation message to the client
+        if (existingRecords.length > 0) {
+          // Customize the confirmation message based on your needs
+          const confirmationMessage = `Data already exists for the same department, semester, course, and rollNumber. Do you want to update it?`;
+
+          // Send confirmation message to the client
+          return res.status(409).json({ confirmationMessage, existingData: existingRecords[0] });
+        }
+
+        // Add your logic to save the results to the database
+        const insertSql = 'INSERT INTO result (dept_id, s_id, semester, c_id, rollNumber, marks) VALUES (?, ?, ?, ?, ?, ?)';
+        await queryParamPromise(insertSql, [department, sid, semester, course, rollNo, gpa]);
+      }
+
+      // Commit the transaction
+      await queryParamPromise('COMMIT');
+
+      // Set success flash message
+      req.flash('success', 'Success: Results added successfully');
+      res.redirect('/staff/addResult');
+      // Redirect to the addResult page
+    } catch (error) {
+      // Rollback the transaction in case of an error
+      await queryParamPromise('ROLLBACK');
+
+      // Log the error details
+      console.error('Error processing results:', error);
+
+      // Handle the error using the centralized error handling function
+      return handleErrors(req, res, 'Error: Processing results. Please try again.', error);
+    }
+  } catch (error) {
+    // Log the error details
+    console.error('Error: Parsing Excel file or inserting into the database:', error);
+
+    // Handle the error using the centralized error handling function
+    return handleErrors(req, res, 'Error: Parsing Excel file or inserting into the database. Please try again.', error);
+  }
+};
+
+exports.getResult = async (req, res, next) => {
+  try {
+    const sql = `
+      SELECT s.s_name AS student_name, s.rollNumber AS student_rollNumber,
+             d.d_name AS department, c.name AS course_name, r.semester AS semester, r.marks
+      FROM result AS r
+      JOIN student AS s ON r.s_id = s.s_id
+      JOIN course AS c ON r.c_id = c.c_id
+      JOIN department AS d ON r.dept_id = d.dept_id
+    `;
+
+    const results = await zeroParamPromise(sql);
+    res.render("Staff/getResult", {
+      data: results,
+      page_name: "results",
+    });
+  } catch (error) {
+    console.error("Error fetching results:", error);
+    // Pass an error message to the UI
+    res.render("Staff/getResult", {
+      error: "Error fetching results. Please try again later.",
+      page_name: "results",
+    });
   }
 };

@@ -7,7 +7,7 @@ module.exports = class Mysql {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
-      database: 'cumsdbms',
+      database: 'SRMS',
     });
     // connect to database
     db.connect((err) => {
